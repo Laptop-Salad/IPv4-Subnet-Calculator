@@ -192,6 +192,7 @@ int main(int argc)
     
     if (prefix == 8 || prefix == 16 || prefix == 24)
     {
+        printf("Usable Host Addresses: %i\n", (int)pow(2, 32 - prefix) - 2);
         return 0;
     }
 
