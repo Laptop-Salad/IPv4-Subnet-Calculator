@@ -230,22 +230,40 @@ int main(int argc)
                 hostBits += 1;
             }
         }
-
-        if (subnetBits == 8 && hostOctetStart < 3)
-        {
-            subnetBits = 0;
-        }
     }
 
-    int networks = pow(2, subnetBits);
-    int magicNumber = 256 / networks;
-    int usableHosts = pow(2, hostBits) - 2;
+    // Calculating magic number is different for each ip class
+    int networks;
+    int magicNumber;
+    int usableHosts;
+    int calculateMN;
+
+    networks = pow(2, subnetBits);
+    
+    if (subnetBits > 8 && hostOctetStart == 1)
+    {
+        calculateMN = pow(2, subnetBits - (hostOctetStart * 8));
+    }
+    else if (subnetBits > 8 && hostOctetStart == 2)
+    {
+        calculateMN = pow(2, subnetBits - ((hostOctetStart - 1) * 8));
+    }
+    else 
+    {
+        calculateMN = networks;
+    }
+
+    magicNumber = 256 / calculateMN;
+
+    // Calculate and display usable host addresses
+    usableHosts = pow(2, hostBits) - 2;
 
     printf("Usable Host Addresses/Subnet: %i\n", usableHosts);
 
     int count = 256;
     int subnetAddress[4];
 
+    // Copy network IP address into subnetAddress
     for (int i = 0; i < 4; i++)
     {
         subnetAddress[i] = networkIP[i];
@@ -255,11 +273,49 @@ int main(int argc)
 
     printf("\nAll %i Possible /%i Networks For %i.%i.%i.%i\n", networks, prefix, networkIP[0], networkIP[1], networkIP[2], networkIP[3]);
 
-    while (count != 0 && magicNumber != 0)
+    // If only one octet increases
+    if (subnetBits <= 8)
     {
-        count -= magicNumber;
-        subnetAddress[finalOctet] = count;
-        printf("%i.%i.%i.%i\n", subnetAddress[0], subnetAddress[1], subnetAddress[2], subnetAddress[3]);
+        // Increase octet with last subnet bit
+        while (count != 0 && magicNumber != 0)
+        {
+            count -= magicNumber;
+            subnetAddress[finalOctet] = count;
+            printf("%i.%i.%i.%i\n", subnetAddress[0], subnetAddress[1], subnetAddress[2], subnetAddress[3]);
+        }
+    } 
+    // If two octets increase
+    else if (subnetBits > 8 && subnetBits < 16)
+    {
+        int oneCount = 0;
+        subnetAddress[finalOctet-1] = oneCount;
+        
+        // Increase octet before octet with last subnet bit
+        while (oneCount < 256)
+        {
+
+            subnetAddress[finalOctet-1] = oneCount;
+            count = 0;
+
+            subnetAddress[finalOctet] = 0;
+            printf("%i.%i.%i.%i\n", subnetAddress[0], subnetAddress[1], subnetAddress[2], subnetAddress[3]);
+
+            // Increase octet with last subnet bit
+            while (count < 256 && magicNumber != 0)
+            {
+                count += magicNumber;
+
+                if (count == 256)
+                {
+                    break;
+                }
+
+                subnetAddress[finalOctet] = count;
+                printf("%i.%i.%i.%i\n", subnetAddress[0], subnetAddress[1], subnetAddress[2], subnetAddress[3]);
+            }
+
+            oneCount += 1;
+        }
     }
 
 
