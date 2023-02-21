@@ -239,11 +239,19 @@ int main(int argc)
     int calculateMN;
 
     networks = pow(2, subnetBits);
-    
-    if (subnetBits > 8 && hostOctetStart == 1)
+
+
+    // If class A and subnet bits is more than 2 octets
+    if (subnetBits > 16 && hostOctetStart == 1)
+    {
+        calculateMN = pow(2, subnetBits - 16);
+    }
+    // If class A and subnet bits is more than 1 octet
+    else if (subnetBits > 8 && hostOctetStart == 1)
     {
         calculateMN = pow(2, subnetBits - (hostOctetStart * 8));
     }
+    // If class B and subnet bits is more than 1 octet
     else if (subnetBits > 8 && hostOctetStart == 2)
     {
         calculateMN = pow(2, subnetBits - ((hostOctetStart - 1) * 8));
@@ -293,7 +301,6 @@ int main(int argc)
         // Increase octet before octet with last subnet bit
         while (oneCount < 256)
         {
-
             subnetAddress[finalOctet-1] = oneCount;
             count = 0;
 
@@ -316,6 +323,47 @@ int main(int argc)
 
             oneCount += 1;
         }
+    }
+
+    // If three octets increase
+    else if (subnetBits > 16 && hostOctetStart == 1)
+    {
+        subnetAddress[finalOctet-2] = 0;
+        subnetAddress[finalOctet-1] = 0;
+
+        while (subnetAddress[finalOctet-2] < 256)
+        {
+            subnetAddress[finalOctet-1] = 0;
+
+            // Increase octet before octet with last subnet bit
+            while (subnetAddress[finalOctet-1] < 256)
+            {
+                count = 0;
+
+                subnetAddress[finalOctet] = 0;
+                printf("%i.%i.%i.%i\n", subnetAddress[0], subnetAddress[1], subnetAddress[2], subnetAddress[3]);
+
+                // Increase octet with last subnet bit
+                while (count < 256 && magicNumber != 0)
+                {
+
+                    count += magicNumber;
+
+                    if (count == 256)
+                    {
+                        break;
+                    }
+
+                    subnetAddress[finalOctet] = count;
+                    printf("%i.%i.%i.%i\n", subnetAddress[0], subnetAddress[1], subnetAddress[2], subnetAddress[3]);
+                }
+
+                subnetAddress[finalOctet-1] += 1;
+            }
+
+            subnetAddress[finalOctet-2] += 1;
+        }
+        
     }
 
 
